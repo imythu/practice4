@@ -52,6 +52,9 @@ public class UserInfoServiceImpl implements UserInfoService {
     @Override
     public Long register(Map<String, String> userInfo) {
         User user = new User();
+        if (userMapper.selectPasswordByPhoneNumber(userInfo.get("phoneNumber")) != null) {
+            return 0L;
+        }
         user.setUserNickname(userInfo.get("userNickname") == null ? "myth" : userInfo.get("userNickname"));
         user.setUserSignature(userInfo.get("userSignature"));
         user.setHeadImageUrl("getHeadImage?userId=0");  // 0表示使用默认头像
@@ -67,7 +70,8 @@ public class UserInfoServiceImpl implements UserInfoService {
         user.setPassword(userInfo.get("password"));
         user.setGmtCreate(new Date());
         user.setGmtModified(new Date());
-        return (long) userMapper.insertSelective(user);
+        userMapper.insertSelective(user);
+        return user.getUserId();
     }
 
     @Override
@@ -76,7 +80,7 @@ public class UserInfoServiceImpl implements UserInfoService {
             File headImageFile = new File(realPath + File.separator + "headImage_" + userId);
             if (!headImageFile.exists()) {
                 try {
-                    headImageFile = ResourceUtils.getFile(ResourceUtils.CLASSPATH_URL_PREFIX + "defaultHead.jpg");
+                    headImageFile = ResourceUtils.getFile(ResourceUtils.CLASSPATH_URL_PREFIX + "defaultHead.png");
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                     return "500".getBytes();

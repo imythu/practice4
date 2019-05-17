@@ -71,6 +71,7 @@
 	</dependencies>
 
 	<build>
+		<finalName>practice4</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import top.imyth.practice4.entity.Article;
 import top.imyth.practice4.entity.User;
 import top.imyth.practice4.entity.combination.FocusUser;
 import top.imyth.practice4.entity.combination.PublishedArticle;
@@ -50,14 +49,17 @@ public class UserController {
     public Map<String, Integer> headImageUpload(MultipartFile headImageFile, HttpSession session) {
         String path = session.getServletContext().getRealPath("/headImages/");
         if (headImageFile == null) {
-            return jsonResultKeyValueBuildUtil.getResultMapFromInteger(0);
+            return jsonResultKeyValueBuildUtil.getResultMapFromInteger(-1);
         }
-        Long registerResultUserId = Long.valueOf((String) session.getAttribute("registerResultUserId"));
-        if (registerResultUserId == null) {
-            Long userId = Long.valueOf((String) session.getAttribute("userId"));
+        if (session.getAttribute("registerResultUserId") == null) {
+            if (session.getAttribute("userId") == null) {
+                return jsonResultKeyValueBuildUtil.getResultMapFromInteger(-1);
+            }
+            Long userId = (Long) session.getAttribute("userId");
             return jsonResultKeyValueBuildUtil.getResultMapFromInteger(userInfoServiceImpl.updateHeadImage(headImageFile,
                     userId, path));
         } else {
+            Long registerResultUserId = Long.valueOf((String) session.getAttribute("registerResultUserId"));
             session.removeAttribute("registerResultUserId");
             return jsonResultKeyValueBuildUtil.getResultMapFromInteger(userInfoServiceImpl.updateHeadImage(headImageFile,
                     registerResultUserId, path));
@@ -75,18 +77,55 @@ public class UserController {
 
             // 防止多处同时登录
             String currentUserOldSessionId = LoginStatusMap.userIdAndSessionIdMap.get(result);
-            if (currentUserOldSessionId != null) {  // 如果存在session
+//            System.out.println("上次登录sessionId：" + currentUserOldSessionId);
+            // 如果存在session，说明在其他地方登录过
+            if (currentUserOldSessionId != null) {
+                // 判断一下，避免NPE
                 if (LoginStatusMap.sessionIdAndSessionMap.containsKey(currentUserOldSessionId)) {
+//                    System.out.println("不为null");
                     HttpSession oldSession = LoginStatusMap.sessionIdAndSessionMap.get(currentUserOldSessionId);
                     if (oldSession != null) {
+                        // session无效化
+//                        System.out.println("session无效化");
                         oldSession.invalidate();
+//                        System.out.println("强制下线");
                     }
-                    LoginStatusMap.sessionIdAndSessionMap.remove(currentUserOldSessionId);
+                    // 移除 无效sessionId和无效session
+//                    System.out.println("移除 无效sessionId" +currentUserOldSessionId + "和无效session");
+//                    LoginStatusMap.sessionIDAndUserIdMap.remove(currentUserOldSessionId);
+//                    LoginStatusMap.sessionIdAndSessionMap.remove(currentUserOldSessionId);
                 }
             }
+            // 添加sessionId和userId的互相对应关系
+//            System.out.print("添加sessionId和userId的互相对应关系");
+            LoginStatusMap.sessionIDAndUserIdMap.put(session.getId(), result);
+//            System.out.println(session.getId() + " --- " + result);
+            // 如果登录时当前用户已有session，userId会覆盖之前的记录
             LoginStatusMap.userIdAndSessionIdMap.put(result, session.getId());
         }
         return jsonResultKeyValueBuildUtil.getResultMapFromLong(result);
+    }
+
+    @GetMapping("isOnline")
+    public Map<String, String> isOnline(HttpSession session) {
+        if (session.getAttribute("userId") == null) {
+            return jsonResultKeyValueBuildUtil.getResultMapFromString("不在线");
+        }
+        return jsonResultKeyValueBuildUtil.getResultMapFromString("在线");
+    }
+
+    @RequestMapping("loginOut")
+    public Map<String, Integer> loginOut(HttpSession session) {
+        String sessionId = session.getId();
+        Long userId = (Long) session.getAttribute("userId");
+        if (userId == null) {
+            return jsonResultKeyValueBuildUtil.getResultMapFromInteger(1);
+        }
+        session.invalidate();
+        LoginStatusMap.userIdAndSessionIdMap.remove(userId);
+        LoginStatusMap.sessionIDAndUserIdMap.remove(sessionId);
+        LoginStatusMap.sessionIdAndSessionMap.remove(sessionId);
+        return jsonResultKeyValueBuildUtil.getResultMapFromInteger(1);
     }
 
     @GetMapping(value = "getHeadImage")
