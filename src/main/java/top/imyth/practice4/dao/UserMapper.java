@@ -25,4 +25,6 @@ public interface UserMapper {
     String selectHeadImageUrlByUserId(@Param("userId")Long userId);
 
     List<FocusUser> selectFocusUserByUserId(@Param("userId")Long userId);
+
+    User selectByPrimaryPhoneNumber(@Param("phoneNumber")String phoneNumber);
 }

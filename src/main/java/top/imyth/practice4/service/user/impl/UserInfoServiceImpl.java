@@ -36,15 +36,15 @@ public class UserInfoServiceImpl implements UserInfoService {
 
     @Override
     public Long loginCheck(String phoneNumber, String password) {
-        Map<String, Object> resultMap = userMapper.selectPasswordByPhoneNumber(phoneNumber);
-        if (resultMap == null || resultMap.size() == 0) {
+        User user = userMapper.selectByPrimaryPhoneNumber(phoneNumber);
+        if (user == null) {
             return -1L;
         }
-        if (resultMap.get("password").toString().equals(password)) {
-            User user = new User();
-            user.setUserLastLoginTime(new Date());
-            userMapper.updateByPrimaryKeySelective(user);
-            return (Long) resultMap.get("userId");
+        if (user.getPassword().equals(password)) {
+            User loginUser = new User();
+            loginUser.setUserLastLoginTime(new Date());
+            userMapper.updateByPrimaryKeySelective(loginUser);
+            return user.getUserId();
         }
         return 0L;
     }
@@ -56,7 +56,7 @@ public class UserInfoServiceImpl implements UserInfoService {
         user.setUserSignature(userInfo.get("userSignature"));
         user.setHeadImageUrl("getHeadImage?userId=0");  // 0表示使用默认头像
         try {
-            user.setBirthday(dateAndStringConverter.getDateFromString(userInfo.get("birthday")));
+            user.setBirthday(userInfo.get("birthday") == null ? null : dateAndStringConverter.getDateFromString(userInfo.get("birthday")));
         } catch (ParseException e) {
             e.printStackTrace();
             return 500L;

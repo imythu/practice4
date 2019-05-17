@@ -67,7 +67,7 @@ public class UserController {
     @PostMapping(value = "login")
     public Map<String, Long> login(String phoneNumber, String password, HttpSession session) {
         if (phoneNumber == null || password == null) {
-            return jsonResultKeyValueBuildUtil.getResultMapFromLong(-1L);
+            return jsonResultKeyValueBuildUtil.getResultMapFromLong(-2L);
         }
         Long result = userInfoServiceImpl.loginCheck(phoneNumber, password);
         if (result > 0L) {
