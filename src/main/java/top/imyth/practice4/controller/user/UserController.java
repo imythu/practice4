@@ -12,7 +12,9 @@ import top.imyth.practice4.util.JsonResultKeyValueBuildUtil;
 import top.imyth.practice4.util.LoginStatusMap;
 import top.imyth.practice4.util.ParamCheckUtil;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -46,18 +48,18 @@ public class UserController {
     }
 
     @PostMapping(value = "headImageUpload")
-    public Map<String, Integer> headImageUpload(MultipartFile headImageFile, HttpSession session) {
-        String path = session.getServletContext().getRealPath("/headImages/");
+    public Map<String, Integer> headImageUpload(MultipartFile headImageFile, HttpSession session, Long userId) {
+        String path = System.getProperty("user.dir")+"/headImage/";
         if (headImageFile == null) {
-            return jsonResultKeyValueBuildUtil.getResultMapFromInteger(-1);
+            return jsonResultKeyValueBuildUtil.getResultMapFromInteger(-2);
         }
         if (session.getAttribute("registerResultUserId") == null) {
-            if (session.getAttribute("userId") == null) {
-                return jsonResultKeyValueBuildUtil.getResultMapFromInteger(-1);
-            }
-            Long userId = (Long) session.getAttribute("userId");
+//            if (session.getAttribute("userId") == null) {
+//                return jsonResultKeyValueBuildUtil.getResultMapFromInteger(-1);
+//            }
+            Long finalUserId = (Long) session.getAttribute("userId") == null ? userId: (Long) session.getAttribute("userId");
             return jsonResultKeyValueBuildUtil.getResultMapFromInteger(userInfoServiceImpl.updateHeadImage(headImageFile,
-                    userId, path));
+                    finalUserId, path));
         } else {
             Long registerResultUserId = Long.valueOf((String) session.getAttribute("registerResultUserId"));
             session.removeAttribute("registerResultUserId");
@@ -129,11 +131,20 @@ public class UserController {
     }
 
     @GetMapping(value = "getHeadImage")
-    public byte[] getHeadImage(Long userId, HttpSession session) {
+    public void getHeadImage(Long userId, HttpSession session, HttpServletResponse response) throws IOException {
         if (userId == null) {
-            return null;
+            return;
         }
-        return userInfoServiceImpl.getHeadImageUrlByUserId(userId, session.getServletContext().getRealPath("/headImages/"));
+        System.out.println("收到请求图片url");
+        byte[] bytes =  userInfoServiceImpl.getHeadImageUrlByUserId(userId, System.getProperty("user.dir")+"/headImage/");
+//        System.out.println(Arrays.toString(bytes));
+        //设置response头信息
+        //禁止缓存
+        response.setHeader("Pragma", "No-cache");
+        response.setHeader("Cache-Control", "no-cache");
+        response.setDateHeader("Expires", 0);
+        response.setContentType("image/jpeg; charset=utf-8");
+        response.getOutputStream().write(bytes);
     }
 
     @GetMapping(value = "getPublishedArticles")
@@ -165,6 +176,8 @@ public class UserController {
         if (userInfo == null) {
             return jsonResultKeyValueBuildUtil.getResultMapFromInteger(-1);
         }
+        userInfo.setPhoneNumber(null);
+        userInfo.setPassword(null);
         return jsonResultKeyValueBuildUtil.getResultMapFromInteger(userInfoServiceImpl.updateUserInfo(userInfo));
     }
 
@@ -177,5 +190,22 @@ public class UserController {
         user.setPassword(newPwd);
         user.setUserId(userId);
         return jsonResultKeyValueBuildUtil.getResultMapFromInteger(userInfoServiceImpl.updateUserInfo(user));
+    }
+
+    @PostMapping("focusSomeOne")
+    public Map<String, Integer> focusSomeOne(Long myId, Long focusId) {
+        if (myId == null || focusId == null) {
+            return jsonResultKeyValueBuildUtil.getResultMapFromInteger(-1);
+        }
+        int result = userInfoServiceImpl.focusUser(myId, focusId);
+        return jsonResultKeyValueBuildUtil.getResultMapFromInteger(result);
+    }
+
+    @PostMapping("cancelFocusSomeone")
+    public Map<String, Integer> cancelFocusSomeone(Long myId, Long focusId) {
+        if (myId == null || focusId == null) {
+            return jsonResultKeyValueBuildUtil.getResultMapFromInteger(-1);
+        }
+        return jsonResultKeyValueBuildUtil.getResultMapFromInteger(userInfoServiceImpl.cancelFocusUser(myId, focusId));
     }
 }

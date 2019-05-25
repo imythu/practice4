@@ -111,4 +111,9 @@
     where image_id = #{imageId,jdbcType=BIGINT}
       and image_url = #{imageUrl,jdbcType=VARCHAR}
   </update>
+  <select id="selectImagesByArticleId" resultMap="BaseResultMap">
+select image.image_id, image.image_url from image where image.image_id in (
+  select article_image.image_id from article_image where article_image.article_id = #{articleId}
+  );
+    </select>
 </mapper>

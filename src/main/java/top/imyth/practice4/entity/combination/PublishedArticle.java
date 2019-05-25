@@ -1,6 +1,6 @@
 package top.imyth.practice4.entity.combination;
 
-import java.util.Date;
+import java.sql.Date;
 
 public class PublishedArticle {
     private Long articleId;

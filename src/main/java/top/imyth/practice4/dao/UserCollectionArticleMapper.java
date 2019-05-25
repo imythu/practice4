@@ -15,4 +15,6 @@ public interface UserCollectionArticleMapper {
     int updateByPrimaryKeySelective(UserCollectionArticle record);
 
     int updateByPrimaryKey(UserCollectionArticle record);
+
+    Integer selectArticleCollectionNumber(@Param("articleId")Long articleId);
 }

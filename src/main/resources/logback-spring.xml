@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/base.xml" />
+    <logger name="top.imyth.practice4" level="DEBUG" />
+    <springProfile name="staging">
+        <logger name="top.imyth.practice4.aop" level="DEBUG" />
+    </springProfile>
+</configuration>

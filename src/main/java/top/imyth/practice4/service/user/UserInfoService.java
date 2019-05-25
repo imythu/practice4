@@ -73,4 +73,8 @@ public interface UserInfoService {
      * @return 成功返回1，失败返回0
      */
     Integer updateHeadImage(MultipartFile multipartFile, Long userId, String fileRootPath);
+
+    int focusUser(Long myId, Long focusId);
+
+    int cancelFocusUser(Long myId, Long focusId);
 }

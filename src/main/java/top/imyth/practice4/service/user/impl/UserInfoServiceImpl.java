@@ -8,14 +8,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
 import org.springframework.web.multipart.MultipartFile;
 import top.imyth.practice4.dao.ArticleMapper;
+import top.imyth.practice4.dao.UserFocusMapper;
 import top.imyth.practice4.dao.UserMapper;
 import top.imyth.practice4.entity.User;
+import top.imyth.practice4.entity.UserFocus;
 import top.imyth.practice4.entity.combination.FocusUser;
 import top.imyth.practice4.entity.combination.PublishedArticle;
 import top.imyth.practice4.service.user.UserInfoService;
 import top.imyth.practice4.util.DateAndStringConverter;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
@@ -26,6 +31,9 @@ public class UserInfoServiceImpl implements UserInfoService {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private UserFocusMapper userFocusMapper;
 
     @Autowired
     private ArticleMapper articleMapper;
@@ -42,6 +50,7 @@ public class UserInfoServiceImpl implements UserInfoService {
         }
         if (user.getPassword().equals(password)) {
             User loginUser = new User();
+            loginUser.setUserId(user.getUserId());
             loginUser.setUserLastLoginTime(new Date());
             userMapper.updateByPrimaryKeySelective(loginUser);
             return user.getUserId();
@@ -76,6 +85,7 @@ public class UserInfoServiceImpl implements UserInfoService {
 
     @Override
     public byte[] getHeadImageUrlByUserId(Long userId, String realPath) {
+        System.out.println("路径"+realPath);
         if (userId != null) {
             File headImageFile = new File(realPath + File.separator + "headImage_" + userId);
             if (!headImageFile.exists()) {
@@ -97,9 +107,12 @@ public class UserInfoServiceImpl implements UserInfoService {
                 return byteBuf.array();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
+                System.out.println("请求图片异常");
                 return null;
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally {
+                byteBuf.release();
             }
         }
         return null;
@@ -131,13 +144,12 @@ public class UserInfoServiceImpl implements UserInfoService {
 
     @Override
     public Integer updateUserInfo(User user) {
-        user.setPassword(null);
-        user.setPhoneNumber(null);
         return userMapper.updateByPrimaryKeySelective(user);
     }
 
     @Override
     public Integer updateHeadImage(MultipartFile multipartFile, Long userId, String fileRootPath) {
+        System.out.println("路径"+fileRootPath);
         if (!multipartFile.isEmpty()) {
             String fileName = "headImage_" + userId;
             File rootDirectory = new File(fileRootPath);
@@ -156,5 +168,21 @@ public class UserInfoServiceImpl implements UserInfoService {
         } else {
             return 0;
         }
+    }
+
+    @Override
+    public int focusUser(Long myId, Long focusId) {
+        UserFocus userFocus = new UserFocus();
+        userFocus.setMyUserId(myId);
+        userFocus.setFocusUserId(focusId);
+        Date nowDate = new Date();
+        userFocus.setGmtCreate(nowDate);
+        userFocus.setGmtModified(nowDate);
+        return userFocusMapper.insert(userFocus);
+    }
+
+    @Override
+    public int cancelFocusUser(Long myId, Long focusId) {
+        return userFocusMapper.deleteByPrimaryKey(myId, focusId);
     }
 }

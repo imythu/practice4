@@ -20,4 +20,12 @@ public interface ArticleMapper {
     int updateByPrimaryKey(Article record);
 
     List<PublishedArticle> selectPublishedArticleByUserId(@Param("userId")Long userId);
+
+    List<Article> selectNewestArticles(@Param("endArticleId")Integer endArticleId);
+
+    Integer selectNewestArticleId();
+
+    List<Article> selectPopularArticles();
+
+    Long selectUserIdByArticleId(@Param("articleId")Long articleId);
 }

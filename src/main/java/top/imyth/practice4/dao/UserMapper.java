@@ -27,4 +27,6 @@ public interface UserMapper {
     List<FocusUser> selectFocusUserByUserId(@Param("userId")Long userId);
 
     User selectByPrimaryPhoneNumber(@Param("phoneNumber")String phoneNumber);
+
+    String selectUserNicknameByUserID(@Param("userId")Long userId);
 }
