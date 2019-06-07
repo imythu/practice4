@@ -14,6 +14,7 @@ import top.imyth.practice4.util.ParamCheckUtil;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +50,7 @@ public class UserController {
 
     @PostMapping(value = "headImageUpload")
     public Map<String, Integer> headImageUpload(MultipartFile headImageFile, HttpSession session, Long userId) {
-        String path = System.getProperty("user.dir")+"/headImage/";
+        String path = System.getProperty("user.dir") + File.separator+"headImage" + File.separator;
         if (headImageFile == null) {
             return jsonResultKeyValueBuildUtil.getResultMapFromInteger(-2);
         }

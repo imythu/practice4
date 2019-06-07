@@ -28,4 +28,6 @@ public interface ArticleMapper {
     List<Article> selectPopularArticles();
 
     Long selectUserIdByArticleId(@Param("articleId")Long articleId);
+
+    List<Article> selectCollectionArticlesByUserId(@Param("userId")Long userId);
 }

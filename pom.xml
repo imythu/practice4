@@ -11,7 +11,7 @@
 	<groupId>top.imyth</groupId>
 	<artifactId>practice4</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>war</packaging>
+	<packaging>jar</packaging>
 	<name>practice4</name>
 	<description>工程实践4后台</description>
 

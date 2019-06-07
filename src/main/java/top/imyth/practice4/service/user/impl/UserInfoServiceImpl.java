@@ -5,6 +5,7 @@ import io.netty.buffer.Unpooled;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ResourceUtils;
 import org.springframework.web.multipart.MultipartFile;
 import top.imyth.practice4.dao.ArticleMapper;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service("userInfoServiceImpl")
+@Transactional
 public class UserInfoServiceImpl implements UserInfoService {
 
     @Autowired

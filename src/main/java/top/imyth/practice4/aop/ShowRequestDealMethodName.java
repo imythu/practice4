@@ -20,7 +20,7 @@ import java.util.Arrays;
 @Component
 public class ShowRequestDealMethodName {
     private static final Logger logger = LoggerFactory
-        .getLogger(ShowRequestDealMethodName.class);
+            .getLogger(ShowRequestDealMethodName.class);
 
     @Pointcut("execution(public * top.imyth.practice4.controller..*.*(..))")
     public void point() {}

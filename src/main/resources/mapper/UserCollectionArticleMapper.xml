@@ -114,4 +114,7 @@
     <select id="selectArticleCollectionNumber" resultType="java.lang.Integer">
 select count(*) from user_collection_article where article_id = #{articleId}
     </select>
+  <select id="selectArticlesIdByUserId" resultType="java.lang.Long">
+select article_id from user_collection_article where user_id = #{userId}
+    </select>
 </mapper>

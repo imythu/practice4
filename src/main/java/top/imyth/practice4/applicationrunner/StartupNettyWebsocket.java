@@ -31,31 +31,34 @@ public class StartupNettyWebsocket implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        // 启动websocket
-        EventLoopGroup bossWorker = new NioEventLoopGroup();
-        EventLoopGroup worker = new NioEventLoopGroup();
-        ServerBootstrap bootstrap = new ServerBootstrap();
+        Thread thread = new Thread(() -> {
+            // 启动websocket
+            EventLoopGroup bossWorker = new NioEventLoopGroup();
+            EventLoopGroup worker = new NioEventLoopGroup();
+            ServerBootstrap bootstrap = new ServerBootstrap();
 
-        bootstrap.group(bossWorker, worker)
-                .channel(NioServerSocketChannel.class)
-                .childHandler(new ChannelInitializer<SocketChannel>() {
-                    @Override
-                    protected void initChannel(SocketChannel socketChannel) throws Exception {
-                        socketChannel.pipeline().addLast("httpServerCodec", new HttpServerCodec())
-                                .addLast("aggregator", new HttpObjectAggregator(65536))
-                                .addLast("httpChunked", new ChunkedWriteHandler())
-                                .addLast("httpHandler", mythHttpHandler);
-                    }
-                });
-        try {
-            Channel channel = bootstrap.bind(port).sync().channel();
-            System.out.println("websocket已启动，端口为"+port);
-            channel.closeFuture().sync();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            bossWorker.shutdownGracefully();
-            worker.shutdownGracefully();
-        }
+            bootstrap.group(bossWorker, worker)
+                    .channel(NioServerSocketChannel.class)
+                    .childHandler(new ChannelInitializer<SocketChannel>() {
+                        @Override
+                        protected void initChannel(SocketChannel socketChannel) throws Exception {
+                            socketChannel.pipeline().addLast("httpServerCodec", new HttpServerCodec())
+                                    .addLast("aggregator", new HttpObjectAggregator(65536))
+                                    .addLast("httpChunked", new ChunkedWriteHandler())
+                                    .addLast("httpHandler", mythHttpHandler);
+                        }
+                    });
+            try {
+                Channel channel = bootstrap.bind(port).sync().channel();
+                System.out.println("websocket已启动，端口为"+port);
+                channel.closeFuture().sync();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                bossWorker.shutdownGracefully();
+                worker.shutdownGracefully();
+            }
+        });
+        thread.start();
     }
 }

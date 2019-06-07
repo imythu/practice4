@@ -11,6 +11,7 @@ import top.imyth.practice4.configuration.RedisConfiguration;
 import top.imyth.practice4.dao.*;
 import top.imyth.practice4.entity.Article;
 import top.imyth.practice4.entity.combination.ArticleForShow;
+import top.imyth.practice4.service.community.impl.ArticleServiceImpl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,18 +26,11 @@ public class ArticleCacheExecutor implements ApplicationRunner {
     private ArticleMapper articleMapper;
 
     @Autowired
-    private CommentMapper commentMapper;
-    @Autowired
-    private ImageMapper imageMapper;
-    @Autowired
-    private UserCollectionArticleMapper userCollectionArticleMapper;
-    @Autowired
-    private UserArticleMapper userArticleMapper;
-    @Autowired
-    private UserMapper userMapper;
-    @Autowired
     @Qualifier("articleRedisTemplate")
     private RedisTemplate<String, ArticleForShow> articleRedisTemplate;
+
+    @Autowired
+    private ArticleServiceImpl articleService;
 
     public void cachePopularArticle() {
         //
@@ -44,29 +38,12 @@ public class ArticleCacheExecutor implements ApplicationRunner {
         scheduledThreadPoolExecutor.scheduleAtFixedRate(() -> {
             System.out.println("开始运行热门贴子缓存");
             List<Article> popularArticleList = articleMapper.selectPopularArticles();
-            List<ArticleForShow> articleForShowList = getArticleForShowList(popularArticleList);
+            List<ArticleForShow> articleForShowList = articleService.getArticleForShowList(popularArticleList);
             articleRedisTemplate.delete(RedisConfiguration.POPULAR_ARTICLE_LIST_KEY);
             // 一次性push
             articleRedisTemplate.opsForList().rightPushAll(RedisConfiguration.POPULAR_ARTICLE_LIST_KEY, articleForShowList);
             System.out.println("热门贴子缓存完毕");
         }, 0L, 30L, TimeUnit.MINUTES);
-
-    }
-
-    public List<ArticleForShow> getArticleForShowList(List<Article> articleList) {
-        List<ArticleForShow> articleForShowList = new ArrayList<>(articleList.size());
-        for (Article article : articleList) {
-            ArticleForShow articleForShow = new ArticleForShow();
-            articleForShow.setArticle(article);
-            articleForShow.setImageList(imageMapper.selectImagesByArticleId(article.getArticleId()));
-            articleForShow.setCommentList(commentMapper.selectCommentsByArticleId(article.getArticleId()));
-            articleForShow.setReplyNum(articleForShow.getCommentList().size());
-            articleForShow.setFocusNumber(userCollectionArticleMapper.selectArticleCollectionNumber(article.getArticleId()));
-            articleForShow.setUserId(userArticleMapper.selectUserIdByArticleId(article.getArticleId()));
-            articleForShow.setUserNickname(userMapper.selectUserNicknameByUserID(articleForShow.getUserId()));
-            articleForShowList.add(articleForShow);
-        }
-        return articleForShowList;
     }
 
     @Override
@@ -82,7 +59,7 @@ public class ArticleCacheExecutor implements ApplicationRunner {
         scheduledThreadPoolExecutor.scheduleWithFixedDelay(() -> {
             System.out.println("开始运行最新10条贴子缓存");
             List<Article> articles = articleMapper.selectNewestArticles(articleMapper.selectNewestArticleId() + 1);
-            List<ArticleForShow> articleForShowList = getArticleForShowList(articles);
+            List<ArticleForShow> articleForShowList = articleService.getArticleForShowList(articles);
             articleRedisTemplate.delete(RedisConfiguration.NEWEST_TEN_ARTICLES);
             // 一次性push
             articleRedisTemplate.opsForList().rightPushAll(RedisConfiguration.NEWEST_TEN_ARTICLES, articleForShowList);
