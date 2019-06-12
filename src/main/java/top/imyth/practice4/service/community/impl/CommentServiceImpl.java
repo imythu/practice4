@@ -45,6 +45,9 @@ public class CommentServiceImpl implements CommentService {
         if (commentMapper.insertSelective(comment) < 0) {
             return null;
         }
+
+        articleService.cacheNewestTenArticles();
+
         Long commentId = comment.getCommentId();
         System.out.println("评论id"+commentId);
         Long targetId = comment.getReplyToUserId();

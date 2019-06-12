@@ -62,7 +62,7 @@ public class ArticleController {
     }
 
     @GetMapping("getArticleImage/{url}")
-    public void getArticleImageByArticleId(HttpServletResponse response, @PathVariable("url") String url) throws IOException {
+    public void getArticleImage(HttpServletResponse response, @PathVariable("url") String url) throws IOException {
         response.getOutputStream().write(articleService.getArticleImageBytesByArticleId(url));
     }
 

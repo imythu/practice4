@@ -9,6 +9,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
+import org.springframework.util.ResourceUtils;
 import org.springframework.web.multipart.MultipartFile;
 import top.imyth.practice4.configuration.RedisConfiguration;
 import top.imyth.practice4.dao.*;
@@ -82,7 +83,14 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Override
     public Integer unFocusArticle(Long userId, Long articleId) {
-        return userCollectionArticleMapper.deleteByPrimaryKey(userId, articleId);
+
+        int result = userCollectionArticleMapper.deleteByPrimaryKey(userId, articleId);
+
+        if (result > 0) {
+            cacheNewestTenArticles();
+        }
+
+        return result;
     }
 
     @Override
@@ -110,7 +118,7 @@ public class ArticleServiceImpl implements ArticleService {
             throw new RuntimeException("insert article failed");
         }
         String rootPath = System.getProperty("user.dir") + File.separator + "articleImages";
-        if (imageFiles.length == 0) {
+        if (imageFiles.length != 0) {
             for (MultipartFile imageFile : imageFiles) {
                 // 图片有一张为null 就算上传失败， 抛出异常回滚
                 if (imageFile == null || imageFile.isEmpty()) {
@@ -154,17 +162,33 @@ public class ArticleServiceImpl implements ArticleService {
         userArticle.setUserId(userId);
         userArticle.setGmtCreate(now);
         userArticle.setGmtModified(now);
-        return userArticleMapper.insert(userArticle);
+        int lastResult = userArticleMapper.insert(userArticle);
+        if (lastResult > 0) {
+            cacheNewestTenArticles();
+        }
+        return lastResult;
+    }
+
+    @Override
+    public void cacheNewestTenArticles() {
+        System.out.println("开始运行最新10条贴子缓存");
+        List<Article> articles = articleMapper.selectNewestArticles(articleMapper.selectNewestArticleId() + 1);
+        List<ArticleForShow> articleForShowList = getArticleForShowList(articles);
+        articleRedisTemplate.delete(RedisConfiguration.NEWEST_TEN_ARTICLES);
+        // 一次性push
+        articleRedisTemplate.opsForList().rightPushAll(RedisConfiguration.NEWEST_TEN_ARTICLES, articleForShowList);
+        System.out.println("最新10条贴子缓存完毕");
     }
 
     @Override
     public byte[] getArticleImageBytesByArticleId(String url) throws IOException {
         ByteBuf byteBuf = Unpooled.buffer();
         String fileName = System.getProperty("user.dir") + File.separator + "articleImages" + File.separator + url;
-        if (!(new File(fileName).exists())) {
-            return null;
+        File imageFile = new File(fileName);
+        if (!(imageFile.exists())) {
+            imageFile = ResourceUtils.getFile(ResourceUtils.CLASSPATH_URL_PREFIX + "img_load_fail.jpg");
         }
-        FileInputStream fileInputStream = new FileInputStream(fileName);
+        FileInputStream fileInputStream = new FileInputStream(imageFile);
         byte[] bytes = new byte[1024];
         while (fileInputStream.available() > 0) {
             fileInputStream.read(bytes);
@@ -181,6 +205,8 @@ public class ArticleServiceImpl implements ArticleService {
         Date now = new Date();
         userCollectionArticle.setGmtCreate(now);
         userCollectionArticle.setGmtModified(now);
+
+        cacheNewestTenArticles();
 
         return userCollectionArticleMapper.insert(userCollectionArticle);
     }

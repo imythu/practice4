@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.DigestUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.web.multipart.MultipartFile;
 import top.imyth.practice4.dao.ArticleMapper;
@@ -50,7 +51,8 @@ public class UserInfoServiceImpl implements UserInfoService {
         if (user == null) {
             return -1L;
         }
-        if (user.getPassword().equals(password)) {
+//        System.out.println(DigestUtils.md5DigestAsHex(password.getBytes()));
+        if (user.getPassword().equals(DigestUtils.md5DigestAsHex(password.getBytes()))) {
             User loginUser = new User();
             loginUser.setUserId(user.getUserId());
             loginUser.setUserLastLoginTime(new Date());
@@ -78,7 +80,7 @@ public class UserInfoServiceImpl implements UserInfoService {
         user.setGender(Boolean.valueOf(userInfo.get("gender")));
         user.setEmail(userInfo.get("email"));
         user.setPhoneNumber(userInfo.get("phoneNumber"));
-        user.setPassword(userInfo.get("password"));
+        user.setPassword(DigestUtils.md5DigestAsHex(userInfo.get("password").getBytes()));
         user.setGmtCreate(new Date());
         user.setGmtModified(new Date());
         userMapper.insertSelective(user);
@@ -87,7 +89,7 @@ public class UserInfoServiceImpl implements UserInfoService {
 
     @Override
     public byte[] getHeadImageUrlByUserId(Long userId, String realPath) {
-        System.out.println("路径"+realPath);
+//        System.out.println("路径"+realPath);
         if (userId != null) {
             File headImageFile = new File(realPath + File.separator + "headImage_" + userId);
             if (!headImageFile.exists()) {
@@ -146,6 +148,9 @@ public class UserInfoServiceImpl implements UserInfoService {
 
     @Override
     public Integer updateUserInfo(User user) {
+        if (user.getPassword() != null) {
+            user.setPassword(DigestUtils.md5DigestAsHex(user.getPassword().getBytes()));
+        }
         return userMapper.updateByPrimaryKeySelective(user);
     }
 
@@ -162,6 +167,8 @@ public class UserInfoServiceImpl implements UserInfoService {
             }
             try {
                 multipartFile.transferTo(new File(fileRootPath + File.separator + fileName));
+                User user = new User();
+                user.setHeadImageUrl("getHeadImage/");
                 return 1;
             } catch (IOException e) {
                 e.printStackTrace();

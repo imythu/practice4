@@ -11,21 +11,9 @@
 	<groupId>top.imyth</groupId>
 	<artifactId>practice4</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>jar</packaging>
+	<packaging>war</packaging>
 	<name>practice4</name>
 	<description>工程实践4后台</description>
-
-	<!--<repositories>-->
-		<!--<repository>-->
-			<!--<id>central</id>-->
-			<!--<name>Central Repository</name>-->
-			<!--<url>https://repo.maven.apache.org/maven2</url>-->
-			<!--<layout>default</layout>-->
-			<!--<snapshots>-->
-				<!--<enabled>false</enabled>-->
-			<!--</snapshots>-->
-		<!--</repository>-->
-	<!--</repositories>-->
 
 	<properties>
 		<java.version>1.8</java.version>

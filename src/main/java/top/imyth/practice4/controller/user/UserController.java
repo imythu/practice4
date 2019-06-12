@@ -28,10 +28,6 @@ public class UserController {
     private UserInfoService userInfoServiceImpl;
 
     @Autowired
-    @Qualifier("paramCheckUtil")
-    private ParamCheckUtil paramCheckUtil;
-
-    @Autowired
     @Qualifier("jsonResultKeyValueBuildUtil")
     private JsonResultKeyValueBuildUtil jsonResultKeyValueBuildUtil;
 
@@ -51,7 +47,7 @@ public class UserController {
     @PostMapping(value = "headImageUpload")
     public Map<String, Integer> headImageUpload(MultipartFile headImageFile, HttpSession session, Long userId) {
         String path = System.getProperty("user.dir") + File.separator+"headImage" + File.separator;
-        if (headImageFile == null) {
+        if (headImageFile == null || userId == null) {
             return jsonResultKeyValueBuildUtil.getResultMapFromInteger(-2);
         }
         if (session.getAttribute("registerResultUserId") == null) {

@@ -27,4 +27,5 @@ public interface ArticleService {
     Map<String, List<Long>> getMyFocusArticlesId(Long userId);
 
     List<ArticleForShow> getMyFocusArticles(Long userId);
+    void cacheNewestTenArticles();
 }
